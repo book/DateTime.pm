@@ -5,6 +5,11 @@ program-extensions = pl psgi t
 
 exclude = Subroutines::ProhibitCallsToUndeclaredSubs
 
+# We've removed "second" from the forbidden list since it's pretty unambiguous
+# in DateTime
+[NamingConventions::ProhibitAmbiguousNames]
+forbid = abstract bases close contract last left no record right set
+
 [BuiltinFunctions::ProhibitStringySplit]
 severity = 3
 
@@ -65,3 +70,5 @@ add_packages = Carp Test::Builder
 # prevents very common errors when using a sub in list context to construct a
 # hash and ending up with a missing value or key.
 [-Subroutines::ProhibitExplicitReturnUndef]
+
+[-ControlStructures::ProhibitNegativeExpressionsInUnlessAndUntilConditions]

@@ -1,3 +1,4 @@
+## no critic (Modules::ProhibitExcessMainComplexity)
 package DateTime;
 
 use 5.008001;
@@ -18,6 +19,9 @@ use Params::Validate 1.03
 use POSIX qw(floor fmod);
 use Try::Tiny;
 
+## no critic (Variables::ProhibitPackageVars)
+our $IsPurePerl;
+
 {
     my $loaded = 0;
 
@@ -31,8 +35,8 @@ use Try::Tiny;
                 : 42
             );
 
-            $loaded               = 1;
-            $DateTime::IsPurePerl = 0;
+            $loaded     = 1;
+            $IsPurePerl = 0;
         }
         catch {
             die $_ if $_ && $_ !~ /object version|loadable object/;
@@ -40,6 +44,7 @@ use Try::Tiny;
     }
 
     if ($loaded) {
+        ## no critic (Variables::ProtectPrivateVars)
         require DateTime::PPExtra
             unless defined &DateTime::_normalize_tai_seconds;
     }
@@ -69,6 +74,7 @@ use overload (
 # or else weird crashes ensue
 require DateTime::Infinite;
 
+## no critic (ValuesAndExpressions::ProhibitConstantPragma)
 use constant MAX_NANOSECONDS => 1_000_000_000;    # 1E9 = almost 32 bits
 
 use constant INFINITY     => ( 100**100**100**100 );
@@ -887,7 +893,7 @@ sub leap_seconds {
 
     return 0 if $self->{tz}->is_floating;
 
-    return DateTime->_accumulated_leap_seconds( $self->{utc_rd_days} );
+    return $self->_accumulated_leap_seconds( $self->{utc_rd_days} );
 }
 
 sub _stringify {
@@ -1144,7 +1150,7 @@ sub jd { $_[0]->mjd + 2_400_000.5 }
         # yy is a weird special case, where it must be exactly 2 digits
         qr/yy/ => sub {
             my $year = $_[0]->year();
-            my $y2 = substr( $year, -2, 2 ) if length $year > 2;
+            my $y2 = length $year > 2 ? substr( $year, -2, 2 ) : $year;
             $y2 *= -1 if $year < 0;
             $_[0]->_zero_padded_number( 'yy', $y2 );
         },
@@ -1297,22 +1303,14 @@ sub jd { $_[0]->mjd + 2_400_000.5 }
         return sprintf( "%0${size}d", $val );
     }
 
-    sub _space_padded_string {
-        my $self = shift;
-        my $size = length shift;
-        my $val  = shift;
-
-        return sprintf( "% ${size}s", $val );
-    }
-
     sub format_cldr {
         my $self = shift;
 
         # make a copy or caller's scalars get munged
-        my @patterns = @_;
+        my @p = @_;
 
         my @r;
-        foreach my $p (@patterns) {
+        foreach my $p (@p) {
             $p =~ s/\G
                     (?:
                       '((?:[^']|'')*)' # quote escaped bit of text
